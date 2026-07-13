@@ -1,26 +1,39 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, jsonify
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 import io
 import re
+import json
+import os
 
 app = Flask(__name__)
+
+def get_drive_service():
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS')
+    creds_dict = json.loads(creds_json)
+    creds = service_account.Credentials.from_service_account_info(
+        creds_dict,
+        scopes=['https://www.googleapis.com/auth/drive']
+    )
+    return build('drive', 'v3', credentials=creds)
 
 @app.route('/generar', methods=['POST'])
 def generar():
     data = request.get_json()
     titulo = data.get('titulo', 'Planificación Anual')
     contenido = data.get('contenido', '')
+    folder_id = os.environ.get('DRIVE_FOLDER_ID', '')
     
     doc = Document()
     
-    # Estilo general
     style = doc.styles['Normal']
     style.font.name = 'Arial'
     style.font.size = Pt(11)
     
-    # Procesar líneas
     lineas = contenido.split('\n')
     
     for linea in lineas:
@@ -38,7 +51,7 @@ def generar():
         
         if linea.startswith('### '):
             texto = linea[4:]
-            p = doc.add_heading(texto, level=3)
+            doc.add_heading(texto, level=3)
             continue
         
         if linea.startswith('#### '):
@@ -61,7 +74,6 @@ def generar():
         
         if '**' in linea:
             p = doc.add_paragraph()
-            p.paragraph_format.space_after = Pt(6)
             partes = re.split(r'\*\*', linea)
             for i, parte in enumerate(partes):
                 run = p.add_run(parte)
@@ -69,8 +81,7 @@ def generar():
                     run.bold = True
             continue
         
-        p = doc.add_paragraph(linea)
-        p.paragraph_format.space_after = Pt(6)
+        doc.add_paragraph(linea)
     
     buffer = io.BytesIO()
     doc.save(buffer)
@@ -78,12 +89,29 @@ def generar():
     
     nombre_archivo = titulo.replace(' ', '_') + '.docx'
     
-    return send_file(
+    service = get_drive_service()
+    
+    file_metadata = {
+        'name': nombre_archivo,
+        'parents': [folder_id]
+    }
+    
+    media = MediaIoBaseUpload(
         buffer,
-        as_attachment=True,
-        download_name=nombre_archivo,
         mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
+    
+    file = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id, webViewLink'
+    ).execute()
+    
+    return jsonify({
+        'status': 'ok',
+        'documentId': file.get('id'),
+        'url': file.get('webViewLink')
+    })
 
 @app.route('/')
 def health():
