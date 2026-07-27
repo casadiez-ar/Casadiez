@@ -29,7 +29,7 @@ def get_drive_service():
 @app.route('/generar', methods=['POST'])
 def generar():
     data = request.get_json()
-    titulo = data.get('titulo', 'Planificación Anual')
+    titulo = data.get('titulo', 'Planificacion_Anual')
     contenido = data.get('contenido', '')
     folder_id = os.environ.get('DRIVE_FOLDER_ID', '')
 
@@ -91,7 +91,9 @@ def generar():
     doc.save(buffer)
     buffer.seek(0)
 
-    nombre_archivo = titulo.replace(' ', '_') + '.docx'
+    materia = titulo.split('-')[0].strip().replace(' ', '_') if '-' in titulo else titulo.replace(' ', '_')
+    grado = titulo.split('-')[1].strip().replace(' ', '_') if '-' in titulo else ''
+    nombre_archivo = f"Planificacion_Anual_{materia}_{grado}_2026.docx" if grado else f"Planificacion_Anual_{materia}_2026.docx"
 
     service = get_drive_service()
 
