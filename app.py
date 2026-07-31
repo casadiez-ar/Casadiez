@@ -71,24 +71,22 @@ run = p.add_run(text)
 run.font.color.rgb = COLOR_ANTRACITA
 run.font.bold = True
 if level == 1:
-run.font.name = 'Cormorant
-Garamond'
+run.font.name = 'Georgia'
 run.font.size = Pt(16)
 set_paragraph_spacing(p,
 space_before=12, space_after=6)
 elif level == 2:
-run.font.name = 'Cormorant
-Garamond'
+run.font.name = 'Georgia'
 run.font.size = Pt(14)
 set_paragraph_spacing(p,
 space_before=10, space_after=4)
 elif level == 3:
-run.font.name = 'Josefin Sans'
+run.font.name = 'Arial'
 run.font.size = Pt(12)
 run.font.italic = True
 set_paragraph_spacing(p,
-
 space_before=8, space_after=3)
+
 return p
 
 def add_caratula(doc, datos):
@@ -108,8 +106,7 @@ run_simbolo = p_simbolo.add_run('匠心')
 run_simbolo.font.size = Pt(36)
 run_simbolo.font.color.rgb =
 COLOR_DORADO
-run_simbolo.font.name = 'Cormorant
-Garamond'
+run_simbolo.font.name = 'Georgia'
 set_paragraph_spacing(p_simbolo,
 space_before=60, space_after=4)
 # Nombre Casa Diez debajo del símbolo
@@ -118,11 +115,11 @@ p_nombre.alignment =
 WD_ALIGN_PARAGRAPH.CENTER
 run_nombre = p_nombre.add_run('Casa
 Diez')
-
 run_nombre.font.size = Pt(13)
 run_nombre.font.color.rgb =
 COLOR_DORADO
-run_nombre.font.name = 'Josefin Sans'
+
+run_nombre.font.name = 'Arial'
 set_paragraph_spacing(p_nombre,
 space_before=0, space_after=40)
 # Línea separadora dorada
@@ -146,15 +143,14 @@ run_titulo.font.size = Pt(22)
 run_titulo.font.bold = True
 run_titulo.font.color.rgb =
 COLOR_ANTRACITA
-run_titulo.font.name = 'Cormorant
-Garamond'
+run_titulo.font.name = 'Georgia'
 set_paragraph_spacing(p_titulo,
 space_before=0, space_after=8)
-
 # Subtítulo materia
 materia = datos.get('materia', '')
 grado = datos.get('grado', '')
 if materia or grado:
+
 p_subtitulo = doc.add_paragraph()
 p_subtitulo.alignment =
 WD_ALIGN_PARAGRAPH.CENTER
@@ -164,8 +160,7 @@ if materia and grado else materia or grado)
 run_sub.font.size = Pt(14)
 run_sub.font.color.rgb =
 COLOR_ANTRACITA
-run_sub.font.name = 'Cormorant
-Garamond'
+run_sub.font.name = 'Georgia'
 run_sub.font.italic = True
 set_paragraph_spacing(p_subtitulo,
 space_before=0, space_after=50)
@@ -183,12 +178,12 @@ set_paragraph_spacing(p_linea2,
 space_before=0, space_after=30)
 # Datos del docente centrados
 campos = [
-
 ('Establecimiento',
 datos.get('establecimiento', '')),
 ('Docente', datos.get('docente',
 '')),
 ('Cargo', datos.get('cargo', '')),
+
 ('Ciclo lectivo',
 datos.get('ciclo', '')),
 ]
@@ -203,15 +198,13 @@ run_campo.font.bold = True
 run_campo.font.size = Pt(11)
 run_campo.font.color.rgb =
 COLOR_ANTRACITA
-run_campo.font.name = 'Josefin
-Sans'
+run_campo.font.name = 'Arial'
 run_valor =
 p_dato.add_run(valor)
 run_valor.font.size = Pt(11)
 run_valor.font.color.rgb =
 COLOR_ANTRACITA
-run_valor.font.name = 'Josefin
-Sans'
+run_valor.font.name = 'Arial'
 set_paragraph_spacing(p_dato,
 space_before=0, space_after=6)
 # Salto de página al terminar la
@@ -223,6 +216,7 @@ docente):
 """Agrega encabezado con
 establecimiento y nombre del docente."""
 section = doc.sections[0]
+
 header = section.header
 header.is_linked_to_previous = False
 # Limpiar contenido existente del
@@ -239,18 +233,18 @@ run_est = p.add_run(establecimiento)
 run_est.font.size = Pt(9)
 run_est.font.color.rgb =
 COLOR_ANTRACITA
-run_est.font.name = 'Josefin Sans'
+run_est.font.name = 'Arial'
 # Tab para separar
 p.add_run('\t')
 # Docente a la derecha
 run_doc = p.add_run(docente)
-
 run_doc.font.size = Pt(9)
 run_doc.font.color.rgb =
 COLOR_ANTRACITA
-run_doc.font.name = 'Josefin Sans'
+run_doc.font.name = 'Arial'
 # Configurar tabs
 from docx.oxml import OxmlElement
+
 from docx.oxml.ns import qn
 pPr = p._p.get_or_add_pPr()
 tabs = OxmlElement('w:tabs')
@@ -275,13 +269,13 @@ lectivo y numeración."""
 section = doc.sections[0]
 footer = section.footer
 footer.is_linked_to_previous = False
-
 for p in footer.paragraphs:
 p.clear()
 if footer.paragraphs:
 p = footer.paragraphs[0]
 else:
 p = footer.add_paragraph()
+
 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
 # Ciclo lectivo a la izquierda
 run_ciclo = p.add_run(f'Ciclo lectivo
@@ -289,7 +283,7 @@ run_ciclo = p.add_run(f'Ciclo lectivo
 run_ciclo.font.size = Pt(9)
 run_ciclo.font.color.rgb =
 COLOR_ANTRACITA
-run_ciclo.font.name = 'Josefin Sans'
+run_ciclo.font.name = 'Arial'
 # Tab para separar
 p.add_run('\t')
 # Numeración de página a la derecha
@@ -297,20 +291,20 @@ run_pag = p.add_run('Página ')
 run_pag.font.size = Pt(9)
 run_pag.font.color.rgb =
 COLOR_ANTRACITA
-run_pag.font.name = 'Josefin Sans'
+run_pag.font.name = 'Arial'
 # Campo de número de página automático
 fldChar1 = OxmlElement('w:fldChar')
 fldChar1.set(qn('w:fldCharType'),
 'begin')
 instrText = OxmlElement('w:instrText')
 instrText.text = 'PAGE'
-
 fldChar2 = OxmlElement('w:fldChar')
 fldChar2.set(qn('w:fldCharType'),
 'end')
 run_num = p.add_run()
 run_num._r.append(fldChar1)
 run_num._r.append(instrText)
+
 run_num._r.append(fldChar2)
 run_num.font.size = Pt(9)
 run_num.font.color.rgb =
@@ -336,7 +330,6 @@ datos = {
 'grado': '',
 'seccion': '',
 }
-
 patrones = {
 'establecimiento':
 r'\*\*Establecimiento:\*\*\s*(.+)',
@@ -344,6 +337,7 @@ r'\*\*Establecimiento:\*\*\s*(.+)',
 (.+)',
 'cargo': r'\*\*Cargo:\*\*\s*(.+)',
 'ciclo': r'\*\*Ciclo
+
 lectivo:\*\*\s*(.+)',
 'materia': r'\*\*Materia:\*\*\s*
 (.+)',
@@ -369,7 +363,6 @@ texto = re.sub(r'_+', '_', texto)
 return texto
 
 @app.route('/generar', methods=['POST'])
-
 def generar():
 data = request.get_json()
 titulo = data.get('titulo',
@@ -377,13 +370,14 @@ titulo = data.get('titulo',
 contenido = data.get('contenido', '')
 folder_id =
 os.environ.get('DRIVE_FOLDER_ID', '')
+
 # Extraer datos para carátula y
 encabezado
 datos = extraer_datos(contenido)
 doc = Document()
 # Configurar estilo base
 style = doc.styles['Normal']
-style.font.name = 'Josefin Sans'
+style.font.name = 'Arial'
 style.font.size = Pt(11)
 style.font.color.rgb = COLOR_ANTRACITA
 # Márgenes
@@ -398,13 +392,13 @@ add_caratula(doc, datos)
 add_encabezado(
 doc,
 datos.get('establecimiento', 'Casa
-
 Diez'),
 datos.get('docente', '')
 )
 add_pie_pagina(doc, datos.get('ciclo',
 '2026'))
 # Procesar contenido línea por línea
+
 lineas = contenido.split('\n')
 for linea in lineas:
 linea_strip = linea.strip()
@@ -427,7 +421,6 @@ level=3)
 continue
 # #### Subtítulo nivel 4
 if linea_strip.startswith('#### '):
-
 texto = linea_strip[5:]
 p = doc.add_paragraph()
 run = p.add_run(texto)
@@ -435,8 +428,9 @@ run.bold = True
 run.italic = True
 run.font.size = Pt(11)
 run.font.color.rgb =
+
 COLOR_ANTRACITA
-run.font.name = 'Josefin Sans'
+run.font.name = 'Arial'
 set_paragraph_spacing(p,
 space_before=6, space_after=3)
 continue
@@ -452,8 +446,7 @@ texto)
 for i, parte in
 enumerate(partes):
 run = p.add_run(parte)
-run.font.name = 'Josefin
-Sans'
+run.font.name = 'Arial'
 run.font.size = Pt(11)
 run.font.color.rgb =
 COLOR_ANTRACITA
@@ -461,7 +454,6 @@ if i % 2 == 1:
 run.bold = True
 set_paragraph_spacing(p,
 space_before=0, space_after=3)
-
 continue
 # Párrafo con negrita **texto**
 if '**' in linea_strip:
@@ -469,12 +461,12 @@ p = doc.add_paragraph()
 p.alignment =
 WD_ALIGN_PARAGRAPH.JUSTIFY
 partes = re.split(r'\*\*',
+
 linea_strip)
 for i, parte in
 enumerate(partes):
 run = p.add_run(parte)
-run.font.name = 'Josefin
-Sans'
+run.font.name = 'Arial'
 run.font.size = Pt(11)
 run.font.color.rgb =
 COLOR_ANTRACITA
@@ -488,13 +480,12 @@ p = doc.add_paragraph(linea_strip)
 p.alignment =
 WD_ALIGN_PARAGRAPH.JUSTIFY
 for run in p.runs:
-run.font.name = 'Josefin Sans'
+run.font.name = 'Arial'
 run.font.size = Pt(11)
 run.font.color.rgb =
 COLOR_ANTRACITA
 set_paragraph_spacing(p,
 space_before=0, space_after=4)
-
 # Guardar en buffer
 buffer = io.BytesIO()
 doc.save(buffer)
@@ -502,6 +493,7 @@ buffer.seek(0)
 # Nombre del archivo limpio
 materia_clean =
 limpiar_nombre_archivo(datos.get('materia',
+
 'Materia'))
 grado_clean =
 limpiar_nombre_archivo(datos.get('grado',
@@ -524,7 +516,6 @@ _clean}.docx"
 service = get_drive_service()
 file_metadata = {
 'name': nombre_archivo,
-
 'parents': [folder_id]
 }
 media = MediaIoBaseUpload(
@@ -534,6 +525,7 @@ mimetype='application/vnd.openxmlformats-
 officedocument.wordprocessingml.document'
 
 )
+
 file = service.files().create(
 body=file_metadata,
 media_body=media,
