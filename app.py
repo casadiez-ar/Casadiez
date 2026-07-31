@@ -48,7 +48,7 @@ def set_paragraph_spacing(paragraph, space_before=0, space_after=6, line_spacing
 
 
 def add_heading_styled(doc, text, level):
-    """Agrega un título con color antracita y tipografía Cormorant Garamond."""
+    """Agrega un título con color antracita."""
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     run = p.add_run(text)
@@ -201,7 +201,7 @@ def add_encabezado(doc, establecimiento, docente):
     tabs = OxmlElement('w:tabs')
     tab = OxmlElement('w:tab')
     tab.set(qn('w:val'), 'right')
-    tab.set(qn('w:pos'), '9350')
+    tab.set(qn("w:pos"), "9638")
     tabs.append(tab)
     pPr.append(tabs)
 
@@ -267,7 +267,7 @@ def add_pie_pagina(doc, ciclo):
     tabs = OxmlElement('w:tabs')
     tab = OxmlElement('w:tab')
     tab.set(qn('w:val'), 'right')
-    tab.set(qn('w:pos'), '9350')
+    tab.set(qn("w:pos"), "9638")
     tabs.append(tab)
     pPr.append(tabs)
 
