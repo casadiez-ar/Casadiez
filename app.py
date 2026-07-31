@@ -164,11 +164,12 @@ def add_caratula(doc, datos):
 
 def add_encabezado(doc, establecimiento, docente):
     """Agrega encabezado con establecimiento izquierda y docente derecha."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
     section = doc.sections[0]
     header = section.header
     header.is_linked_to_previous = False
 
-    # Limpiar contenido existente
     for p in header.paragraphs:
         p.clear()
 
@@ -177,16 +178,18 @@ def add_encabezado(doc, establecimiento, docente):
     else:
         p = header.add_paragraph()
 
-    # Usar tab con alineación derecha al extremo del área de texto
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-
+    # Texto izquierda
     run_est = p.add_run(establecimiento)
     run_est.font.size = Pt(9)
     run_est.font.color.rgb = COLOR_ANTRACITA
     run_est.font.name = 'Arial'
 
-    p.add_run('\t')
+    # Tab de alineación derecha
+    run_tab = p.add_run()
+    tab_elem = OxmlElement('w:tab')
+    run_tab._r.append(tab_elem)
 
+    # Texto derecha
     run_doc = p.add_run(docente)
     run_doc.font.size = Pt(9)
     run_doc.font.color.rgb = COLOR_ANTRACITA
@@ -194,15 +197,15 @@ def add_encabezado(doc, establecimiento, docente):
 
     pPr = p._p.get_or_add_pPr()
 
-    # Tab al extremo derecho del área de texto
-    tabs = OxmlElement('w:tabs')
-    tab = OxmlElement('w:tab')
-    tab.set(qn('w:val'), 'right')
-    tab.set(qn('w:pos'), '8648')
-    tabs.append(tab)
-    pPr.append(tabs)
+    # Definir tab derecho al final del área de texto
+    tabs_elem = OxmlElement('w:tabs')
+    tab_def = OxmlElement('w:tab')
+    tab_def.set(qn('w:val'), 'right')
+    tab_def.set(qn('w:pos'), '8648')
+    tabs_elem.append(tab_def)
+    pPr.insert(0, tabs_elem)
 
-    # Línea dorada debajo del encabezado
+    # Línea dorada debajo
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
@@ -234,7 +237,9 @@ def add_pie_pagina(doc, ciclo):
     run_ciclo.font.color.rgb = COLOR_ANTRACITA
     run_ciclo.font.name = 'Arial'
 
-    p.add_run('\t')
+    run_tab = p.add_run()
+    tab_elem = OxmlElement('w:tab')
+    run_tab._r.append(tab_elem)
 
     run_pag = p.add_run('Página ')
     run_pag.font.size = Pt(9)
@@ -256,12 +261,12 @@ def add_pie_pagina(doc, ciclo):
     run_num.font.color.rgb = COLOR_ANTRACITA
 
     pPr = p._p.get_or_add_pPr()
-    tabs = OxmlElement('w:tabs')
-    tab = OxmlElement('w:tab')
-    tab.set(qn('w:val'), 'right')
-    tab.set(qn('w:pos'), '8648')
-    tabs.append(tab)
-    pPr.append(tabs)
+    tabs_elem = OxmlElement('w:tabs')
+    tab_def = OxmlElement('w:tab')
+    tab_def.set(qn('w:val'), 'right')
+    tab_def.set(qn('w:pos'), '8648')
+    tabs_elem.append(tab_def)
+    pPr.insert(0, tabs_elem)
 
 
 def extraer_datos(contenido):
