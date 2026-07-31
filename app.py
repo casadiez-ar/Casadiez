@@ -164,6 +164,8 @@ def add_caratula(doc, datos):
 
 def add_encabezado(doc, establecimiento, docente):
     """Agrega encabezado con establecimiento izquierda y docente derecha."""
+    from docx.shared import Twips
+    from docx.enum.text import WD_TAB_ALIGNMENT
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     section = doc.sections[0]
@@ -178,34 +180,26 @@ def add_encabezado(doc, establecimiento, docente):
     else:
         p = header.add_paragraph()
 
-    # Texto izquierda
+    # Limpiar tabs heredados y agregar tab derecho
+    tab_stops = p.paragraph_format.tab_stops
+    tab_stops.clear_all()
+    tab_stops.add_tab_stop(Twips(8648), WD_TAB_ALIGNMENT.RIGHT)
+
+    # Texto izquierda + tab + texto derecha
     run_est = p.add_run(establecimiento)
     run_est.font.size = Pt(9)
     run_est.font.color.rgb = COLOR_ANTRACITA
     run_est.font.name = 'Arial'
 
-    # Tab de alineación derecha
-    run_tab = p.add_run()
-    tab_elem = OxmlElement('w:tab')
-    run_tab._r.append(tab_elem)
+    p.add_run('\t')
 
-    # Texto derecha
     run_doc = p.add_run(docente)
     run_doc.font.size = Pt(9)
     run_doc.font.color.rgb = COLOR_ANTRACITA
     run_doc.font.name = 'Arial'
 
-    pPr = p._p.get_or_add_pPr()
-
-    # Definir tab derecho al final del área de texto
-    tabs_elem = OxmlElement('w:tabs')
-    tab_def = OxmlElement('w:tab')
-    tab_def.set(qn('w:val'), 'right')
-    tab_def.set(qn('w:pos'), '8648')
-    tabs_elem.append(tab_def)
-    pPr.insert(0, tabs_elem)
-
     # Línea dorada debajo
+    pPr = p._p.get_or_add_pPr()
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
@@ -237,9 +231,14 @@ def add_pie_pagina(doc, ciclo):
     run_ciclo.font.color.rgb = COLOR_ANTRACITA
     run_ciclo.font.name = 'Arial'
 
-    run_tab = p.add_run()
-    tab_elem = OxmlElement('w:tab')
-    run_tab._r.append(tab_elem)
+    # Limpiar tabs heredados y agregar tab derecho
+    from docx.shared import Twips
+    from docx.enum.text import WD_TAB_ALIGNMENT
+    tab_stops = p.paragraph_format.tab_stops
+    tab_stops.clear_all()
+    tab_stops.add_tab_stop(Twips(8648), WD_TAB_ALIGNMENT.RIGHT)
+
+    p.add_run('\t')
 
     run_pag = p.add_run('Página ')
     run_pag.font.size = Pt(9)
@@ -259,14 +258,6 @@ def add_pie_pagina(doc, ciclo):
     run_num._r.append(fldChar2)
     run_num.font.size = Pt(9)
     run_num.font.color.rgb = COLOR_ANTRACITA
-
-    pPr = p._p.get_or_add_pPr()
-    tabs_elem = OxmlElement('w:tabs')
-    tab_def = OxmlElement('w:tab')
-    tab_def.set(qn('w:val'), 'right')
-    tab_def.set(qn('w:pos'), '8648')
-    tabs_elem.append(tab_def)
-    pPr.insert(0, tabs_elem)
 
 
 def extraer_datos(contenido):
