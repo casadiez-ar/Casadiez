@@ -163,12 +163,12 @@ def add_caratula(doc, datos):
 
 
 def add_encabezado(doc, establecimiento, docente):
-    """Agrega encabezado con establecimiento y nombre del docente."""
+    """Agrega encabezado con establecimiento izquierda y docente derecha."""
     section = doc.sections[0]
     header = section.header
     header.is_linked_to_previous = False
 
-    # Limpiar contenido existente del encabezado
+    # Limpiar contenido existente
     for p in header.paragraphs:
         p.clear()
 
@@ -177,35 +177,32 @@ def add_encabezado(doc, establecimiento, docente):
     else:
         p = header.add_paragraph()
 
+    # Usar tab con alineación derecha al extremo del área de texto
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-    # Establecimiento a la izquierda
     run_est = p.add_run(establecimiento)
     run_est.font.size = Pt(9)
     run_est.font.color.rgb = COLOR_ANTRACITA
     run_est.font.name = 'Arial'
 
-    # Tab para separar
     p.add_run('\t')
 
-    # Docente a la derecha
     run_doc = p.add_run(docente)
     run_doc.font.size = Pt(9)
     run_doc.font.color.rgb = COLOR_ANTRACITA
     run_doc.font.name = 'Arial'
 
-    # Configurar tabs
-    from docx.oxml import OxmlElement
-    from docx.oxml.ns import qn
     pPr = p._p.get_or_add_pPr()
+
+    # Tab al extremo derecho del área de texto
     tabs = OxmlElement('w:tabs')
     tab = OxmlElement('w:tab')
     tab.set(qn('w:val'), 'right')
-    tab.set(qn("w:pos"), "9638")
+    tab.set(qn('w:pos'), '8648')
     tabs.append(tab)
     pPr.append(tabs)
 
-    # Línea separadora del encabezado
+    # Línea dorada debajo del encabezado
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
@@ -217,7 +214,7 @@ def add_encabezado(doc, establecimiento, docente):
 
 
 def add_pie_pagina(doc, ciclo):
-    """Agrega pie de página con ciclo lectivo y numeración."""
+    """Agrega pie de página con ciclo lectivo izquierda y número de página derecha."""
     section = doc.sections[0]
     footer = section.footer
     footer.is_linked_to_previous = False
@@ -232,22 +229,18 @@ def add_pie_pagina(doc, ciclo):
 
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-    # Ciclo lectivo a la izquierda
     run_ciclo = p.add_run(f'Ciclo lectivo {ciclo}')
     run_ciclo.font.size = Pt(9)
     run_ciclo.font.color.rgb = COLOR_ANTRACITA
     run_ciclo.font.name = 'Arial'
 
-    # Tab para separar
     p.add_run('\t')
 
-    # Numeración de página a la derecha
     run_pag = p.add_run('Página ')
     run_pag.font.size = Pt(9)
     run_pag.font.color.rgb = COLOR_ANTRACITA
     run_pag.font.name = 'Arial'
 
-    # Campo de número de página automático
     fldChar1 = OxmlElement('w:fldChar')
     fldChar1.set(qn('w:fldCharType'), 'begin')
     instrText = OxmlElement('w:instrText')
@@ -262,12 +255,11 @@ def add_pie_pagina(doc, ciclo):
     run_num.font.size = Pt(9)
     run_num.font.color.rgb = COLOR_ANTRACITA
 
-    # Configurar tabs
     pPr = p._p.get_or_add_pPr()
     tabs = OxmlElement('w:tabs')
     tab = OxmlElement('w:tab')
     tab.set(qn('w:val'), 'right')
-    tab.set(qn("w:pos"), "9638")
+    tab.set(qn('w:pos'), '8648')
     tabs.append(tab)
     pPr.append(tabs)
 
