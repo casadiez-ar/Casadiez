@@ -162,44 +162,67 @@ def add_caratula(doc, datos):
     doc.add_page_break()
 
 
+def quitar_bordes_tabla(tabla):
+    """Quita todos los bordes visibles de una tabla."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    tbl = tabla._tbl
+    tblPr = tbl.find(qn('w:tblPr'))
+    if tblPr is None:
+        tblPr = OxmlElement('w:tblPr')
+        tbl.insert(0, tblPr)
+    tblBorders = OxmlElement('w:tblBorders')
+    for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'none')
+        border.set(qn('w:sz'), '0')
+        border.set(qn('w:space'), '0')
+        border.set(qn('w:color'), 'auto')
+        tblBorders.append(border)
+    tblPr.append(tblBorders)
+
+
 def add_encabezado(doc, establecimiento, docente):
-    """Agrega encabezado con establecimiento izquierda y docente derecha."""
-    from docx.shared import Twips
-    from docx.enum.text import WD_TAB_ALIGNMENT
+    """Agrega encabezado con tabla 2 columnas: establecimiento izquierda, docente derecha."""
+    from docx.shared import Inches
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     section = doc.sections[0]
     header = section.header
     header.is_linked_to_previous = False
 
+    # Limpiar contenido existente
     for p in header.paragraphs:
         p.clear()
 
-    if header.paragraphs:
-        p = header.paragraphs[0]
-    else:
-        p = header.add_paragraph()
+    # Crear tabla de 2 columnas sin bordes
+    tabla = header.add_table(rows=1, cols=2, width=Inches(6.5))
+    tabla.autofit = False
+    tabla.columns[0].width = Inches(3.25)
+    tabla.columns[1].width = Inches(3.25)
+    quitar_bordes_tabla(tabla)
 
-    # Limpiar tabs heredados y agregar tab derecho
-    tab_stops = p.paragraph_format.tab_stops
-    tab_stops.clear_all()
-    tab_stops.add_tab_stop(Twips(8648), WD_TAB_ALIGNMENT.RIGHT)
-
-    # Texto izquierda + tab + texto derecha
-    run_est = p.add_run(establecimiento)
+    # Celda izquierda — establecimiento
+    celda_izq = tabla.cell(0, 0)
+    p_izq = celda_izq.paragraphs[0]
+    p_izq.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    run_est = p_izq.add_run(establecimiento)
     run_est.font.size = Pt(9)
     run_est.font.color.rgb = COLOR_ANTRACITA
     run_est.font.name = 'Arial'
 
-    p.add_run('\t')
-
-    run_doc = p.add_run(docente)
+    # Celda derecha — docente
+    celda_der = tabla.cell(0, 1)
+    p_der = celda_der.paragraphs[0]
+    p_der.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run_doc = p_der.add_run(docente)
     run_doc.font.size = Pt(9)
     run_doc.font.color.rgb = COLOR_ANTRACITA
     run_doc.font.name = 'Arial'
 
-    # Línea dorada debajo
-    pPr = p._p.get_or_add_pPr()
+    # Línea dorada debajo — en el párrafo vacío que queda después de la tabla
+    p_linea = header.add_paragraph()
+    pPr = p_linea._p.get_or_add_pPr()
     pBdr = OxmlElement('w:pBdr')
     bottom = OxmlElement('w:bottom')
     bottom.set(qn('w:val'), 'single')
