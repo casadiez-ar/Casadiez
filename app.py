@@ -136,6 +136,16 @@ def add_caratula(doc, datos):
     else:
         subtitulo_text = f'Sección {seccion}' if seccion else ''
 
+    # Reconstruir subtítulo con "grado" o "año" + sección
+    if grado_limpio and seccion:
+        subtitulo_text = f'{grado_limpio} {nivel_word} — Sección {seccion}'
+    elif grado_limpio:
+        subtitulo_text = f'{grado_limpio} {nivel_word}'
+    elif seccion:
+        subtitulo_text = f'Sección {seccion}'
+    else:
+        subtitulo_text = ''
+
     if subtitulo_text:
         p_subtitulo = doc.add_paragraph()
         p_subtitulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -205,7 +215,7 @@ def add_encabezado(doc, establecimiento, docente):
     from docx.shared import Inches
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
-    section = doc.sections[0]
+    section = doc.sections[-1]
     header = section.header
     header.is_linked_to_previous = False
 
@@ -256,7 +266,7 @@ def add_pie_pagina(doc, ciclo):
     from docx.shared import Inches
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
-    section = doc.sections[0]
+    section = doc.sections[-1]
     footer = section.footer
     footer.is_linked_to_previous = False
 
@@ -367,7 +377,13 @@ def generar():
     # Agregar carátula
     add_caratula(doc, datos)
 
-    # Agregar encabezado y pie de página
+    # Agregar nueva sección para el contenido (así el encabezado/pie
+    # solo aparece desde la página 2 en adelante)
+    nueva_seccion = doc.add_section()
+    nueva_seccion.header_distance = Cm(1.25)
+    nueva_seccion.footer_distance = Cm(1.25)
+
+    # Agregar encabezado y pie de página (solo en sección del contenido)
     add_encabezado(
         doc,
         datos.get('establecimiento', 'Casa Diez'),
