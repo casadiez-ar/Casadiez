@@ -440,8 +440,13 @@ def generar():
 
     # Nombre del archivo limpio con espacios y sin guiones bajos
     materia = datos.get('materia', 'Materia').strip()
-    grado = datos.get('grado', '').strip()
+    grado_raw = datos.get('grado', '').strip()
     ciclo = datos.get('ciclo', '2026').strip()
+
+    # Limpiar grado: quitar "grado", comillas y espacios extra
+    import re as _re
+    grado = _re.sub(r'(?i) grado ', '', grado_raw).strip()
+    grado = grado.replace('"', '').replace("'", '').strip()
 
     if grado:
         nombre_archivo = f"Planificacion Anual {materia} {grado}.docx"
