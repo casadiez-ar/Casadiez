@@ -195,11 +195,11 @@ def add_encabezado(doc, establecimiento, docente):
     for p in header.paragraphs:
         p.clear()
 
-    # Crear tabla de 2 columnas sin bordes
-    tabla = header.add_table(rows=1, cols=2, width=Inches(6.5))
+    # Crear tabla de 2 columnas sin bordes — ancho = área de texto exacta
+    tabla = header.add_table(rows=1, cols=2, width=Inches(6.1))
     tabla.autofit = False
-    tabla.columns[0].width = Inches(3.25)
-    tabla.columns[1].width = Inches(3.25)
+    tabla.columns[0].width = Inches(3.05)
+    tabla.columns[1].width = Inches(3.05)
     quitar_bordes_tabla(tabla)
 
     # Celda izquierda — establecimiento
