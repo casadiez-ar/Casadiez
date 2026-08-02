@@ -115,13 +115,31 @@ def add_caratula(doc, datos):
     run_titulo.font.name = 'Georgia'
     set_paragraph_spacing(p_titulo, space_before=0, space_after=8)
 
-    # Subtítulo materia
-    materia = datos.get('materia', '')
-    grado = datos.get('grado', '')
-    if materia or grado:
+    # Subtítulo — grado y sección (sin materia)
+    grado_raw = datos.get('grado', '')
+    seccion = datos.get('seccion', '')
+    import re as _re2
+    grado_limpio = _re2.sub(r'(?i)\bgrado\b', '', grado_raw)
+    grado_limpio = _re2.sub(r'(?i)\bsecci[oó]n\b', '', grado_limpio)
+    grado_limpio = grado_limpio.replace('"', '').replace("'", '').replace(',', '').replace('-', '').strip()
+    grado_limpio = _re2.sub(r'\s+', ' ', grado_limpio).strip()
+
+    # Detectar primaria o secundaria por cargo
+    cargo = datos.get('cargo', '')
+    if 'grado' in cargo.lower():
+        nivel_word = 'grado'
+    else:
+        nivel_word = 'año'
+
+    if grado_limpio:
+        subtitulo_text = f'{grado_limpio} {nivel_word} — Sección {seccion}' if seccion else f'{grado_limpio} {nivel_word}'
+    else:
+        subtitulo_text = f'Sección {seccion}' if seccion else ''
+
+    if subtitulo_text:
         p_subtitulo = doc.add_paragraph()
         p_subtitulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run_sub = p_subtitulo.add_run(f'{materia} — {grado}' if materia and grado else materia or grado)
+        run_sub = p_subtitulo.add_run(subtitulo_text)
         run_sub.font.size = Pt(14)
         run_sub.font.color.rgb = COLOR_ANTRACITA
         run_sub.font.name = 'Georgia'
