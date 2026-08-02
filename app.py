@@ -234,7 +234,10 @@ def add_encabezado(doc, establecimiento, docente):
 
 
 def add_pie_pagina(doc, ciclo):
-    """Agrega pie de página con ciclo lectivo izquierda y número de página derecha."""
+    """Agrega pie de página con tabla 2 columnas: ciclo izquierda, página derecha."""
+    from docx.shared import Inches
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
     section = doc.sections[0]
     footer = section.footer
     footer.is_linked_to_previous = False
@@ -242,28 +245,28 @@ def add_pie_pagina(doc, ciclo):
     for p in footer.paragraphs:
         p.clear()
 
-    if footer.paragraphs:
-        p = footer.paragraphs[0]
-    else:
-        p = footer.add_paragraph()
+    # Tabla de 2 columnas sin bordes
+    tabla = footer.add_table(rows=1, cols=2, width=Inches(6.1))
+    tabla.autofit = False
+    tabla.columns[0].width = Inches(3.05)
+    tabla.columns[1].width = Inches(3.05)
+    quitar_bordes_tabla(tabla)
 
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-
-    run_ciclo = p.add_run(f'Ciclo lectivo {ciclo}')
+    # Celda izquierda — ciclo lectivo
+    celda_izq = tabla.cell(0, 0)
+    p_izq = celda_izq.paragraphs[0]
+    p_izq.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    run_ciclo = p_izq.add_run(f'Ciclo lectivo {ciclo}')
     run_ciclo.font.size = Pt(9)
     run_ciclo.font.color.rgb = COLOR_ANTRACITA
     run_ciclo.font.name = 'Arial'
 
-    # Limpiar tabs heredados y agregar tab derecho
-    from docx.shared import Twips
-    from docx.enum.text import WD_TAB_ALIGNMENT
-    tab_stops = p.paragraph_format.tab_stops
-    tab_stops.clear_all()
-    tab_stops.add_tab_stop(Twips(8648), WD_TAB_ALIGNMENT.RIGHT)
+    # Celda derecha — número de página
+    celda_der = tabla.cell(0, 1)
+    p_der = celda_der.paragraphs[0]
+    p_der.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
-    p.add_run('\t')
-
-    run_pag = p.add_run('Página ')
+    run_pag = p_der.add_run('Página ')
     run_pag.font.size = Pt(9)
     run_pag.font.color.rgb = COLOR_ANTRACITA
     run_pag.font.name = 'Arial'
@@ -275,7 +278,7 @@ def add_pie_pagina(doc, ciclo):
     fldChar2 = OxmlElement('w:fldChar')
     fldChar2.set(qn('w:fldCharType'), 'end')
 
-    run_num = p.add_run()
+    run_num = p_der.add_run()
     run_num._r.append(fldChar1)
     run_num._r.append(instrText)
     run_num._r.append(fldChar2)
@@ -435,16 +438,15 @@ def generar():
     doc.save(buffer)
     buffer.seek(0)
 
-    # Nombre del archivo limpio
-    materia_clean = limpiar_nombre_archivo(datos.get('materia', 'Materia'))
-    grado_clean = limpiar_nombre_archivo(datos.get('grado', ''))
-    ciclo_clean = limpiar_nombre_archivo(datos.get('ciclo', '2026'))
-    docente_clean = limpiar_nombre_archivo(datos.get('docente', ''))
+    # Nombre del archivo limpio con espacios y sin guiones bajos
+    materia = datos.get('materia', 'Materia').strip()
+    grado = datos.get('grado', '').strip()
+    ciclo = datos.get('ciclo', '2026').strip()
 
-    if grado_clean:
-        nombre_archivo = f"PlanificacionAnual_{materia_clean}_{grado_clean}_{ciclo_clean}.docx"
+    if grado:
+        nombre_archivo = f"Planificacion Anual {materia} {grado}.docx"
     else:
-        nombre_archivo = f"PlanificacionAnual_{materia_clean}_{ciclo_clean}.docx"
+        nombre_archivo = f"Planificacion Anual {materia} {ciclo}.docx"
 
     # Subir a Google Drive
     service = get_drive_service()
