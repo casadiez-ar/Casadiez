@@ -355,7 +355,10 @@ def generar():
         datos.get('establecimiento', 'Casa Diez'),
         datos.get('docente', '')
     )
-    add_pie_pagina(doc, datos.get('ciclo', '2026'))
+    ciclo_pie = datos.get('ciclo', '').strip()
+    if not ciclo_pie:
+        ciclo_pie = '2026'
+    add_pie_pagina(doc, ciclo_pie)
 
     # Procesar contenido línea por línea
     lineas = contenido.split('\n')
