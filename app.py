@@ -77,16 +77,22 @@ def extraer_bloques_y_trimestres(contenido):
             contenidos_actuales = []
             indicadores_actuales = []
             en_indicadores = False
+            en_contenidos = False
+        elif '#### Contenidos a trabajar' in linea_s:
+            en_contenidos = True
+            en_indicadores = False
         elif '#### Indicadores' in linea_s or 'Indicadores de avance' in linea_s:
             en_indicadores = True
+            en_contenidos = False
         elif '#### ' in linea_s:
             en_indicadores = False
+            en_contenidos = False
         elif linea_s.startswith('- ') and bloque_actual:
             texto = re.sub(r'\*\*', '', linea_s[2:]).strip()[:90]
             if texto and len(texto) > 5:
                 if en_indicadores:
                     indicadores_actuales.append(texto)
-                else:
+                elif en_contenidos:
                     contenidos_actuales.append(texto)
 
     if bloque_actual and not en_criterios:
@@ -795,4 +801,4 @@ def health():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080) 
+    app.run(host='0.0.0.0', port=8080)
