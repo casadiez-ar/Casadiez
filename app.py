@@ -382,7 +382,12 @@ def generar():
     nueva_seccion = doc.add_section()
     nueva_seccion.header_distance = Cm(1.25)
     nueva_seccion.footer_distance = Cm(1.25)
-    nueva_seccion.page_number_start = 1
+    # Forzar numeración desde 1 con XML directo
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    pgNumType = OxmlElement('w:pgNumType')
+    pgNumType.set(qn('w:start'), '1')
+    nueva_seccion._sectPr.append(pgNumType)
 
     # Agregar encabezado y pie de página (solo en sección del contenido)
     add_encabezado(
