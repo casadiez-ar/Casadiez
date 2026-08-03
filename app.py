@@ -18,8 +18,8 @@ app = Flask(__name__)
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
 # Colores Casa Diez
-COLOR_ANTRACITA = RGBColor(0x2B, 0x2B, 0x2B) # #2B2B2B
-COLOR_DORADO = RGBColor(0xC9, 0xA8, 0x4C) # #C9A84C
+COLOR_ANTRACITA = RGBColor(0x2B, 0x2B, 0x2B)  # #2B2B2B
+COLOR_DORADO = RGBColor(0xC9, 0xA8, 0x4C)      # #C9A84C
 
 
 def get_drive_service():
@@ -45,6 +45,253 @@ def set_paragraph_spacing(paragraph, space_before=0, space_after=6, line_spacing
     spacing.set(qn('w:line'), str(int(line_spacing * 240)))
     spacing.set(qn('w:lineRule'), 'auto')
     pPr.append(spacing)
+
+
+def extraer_bloques_y_trimestres(contenido):
+    """Extrae bloques, contenidos e indicadores del texto generado."""
+    import re
+    bloques = []
+    bloque_actual = None
+    contenidos_actuales = []
+    indicadores_actuales = []
+    en_indicadores = False
+
+    lineas = contenido.split('\n')
+    for linea in lineas:
+        linea_s = linea.strip()
+        if linea_s.startswith('### Bloque') or linea_s.startswith('### bloque'):
+            if bloque_actual:
+                bloques.append({
+                    'nombre': bloque_actual,
+                    'contenidos': contenidos_actuales[:4],
+                    'indicadores': indicadores_actuales[:3],
+                    'trimestre': ''
+                })
+            bloque_actual = re.sub(r'^###\s*', '', linea_s).strip()
+            contenidos_actuales = []
+            indicadores_actuales = []
+            en_indicadores = False
+        elif '#### Indicadores' in linea_s or 'Indicadores de avance' in linea_s:
+            en_indicadores = True
+        elif '#### ' in linea_s:
+            en_indicadores = False
+        elif linea_s.startswith('- ') and bloque_actual:
+            texto = re.sub(r'\*\*', '', linea_s[2:]).strip()[:90]
+            if texto and len(texto) > 5:
+                if en_indicadores:
+                    indicadores_actuales.append(texto)
+                else:
+                    contenidos_actuales.append(texto)
+
+    if bloque_actual:
+        bloques.append({
+            'nombre': bloque_actual,
+            'contenidos': contenidos_actuales[:4],
+            'indicadores': indicadores_actuales[:3],
+            'trimestre': ''
+        })
+
+    # Asignar trimestres
+    en_dist = False
+    trimestre_actual = ''
+    for linea in lineas:
+        linea_s = linea.strip()
+        if 'Distribución anual' in linea_s or 'distribucion anual' in linea_s.lower():
+            en_dist = True
+        if en_dist:
+            if '1°' in linea_s and 'trimestre' in linea_s.lower():
+                trimestre_actual = '1°'
+            elif '2°' in linea_s and 'trimestre' in linea_s.lower():
+                trimestre_actual = '2°'
+            elif '3°' in linea_s and 'trimestre' in linea_s.lower():
+                trimestre_actual = '3°'
+            for bloque in bloques:
+                nombre_corto = bloque['nombre'].split(':')[0].strip().lower()
+                if nombre_corto in linea_s.lower() and trimestre_actual:
+                    if not bloque['trimestre']:
+                        bloque['trimestre'] = trimestre_actual
+
+    return bloques
+
+
+def estilo_celda(celda, texto, bold=False, size=9, center=False, fondo=None):
+    """Aplica estilo a una celda de tabla."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    p = celda.paragraphs[0]
+    p.alignment = 1 if center else 0  # CENTER o LEFT
+    run = p.add_run(texto)
+    run.font.bold = bold
+    run.font.size = Pt(size)
+    run.font.color.rgb = COLOR_ANTRACITA
+    run.font.name = 'Arial'
+    if fondo:
+        tc = celda._tc
+        tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear')
+        shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), fondo)
+        tcPr.append(shd)
+
+
+def configurar_seccion_landscape(doc):
+    """Agrega sección apaisada."""
+    sec = doc.add_section()
+    sec.orientation = 1
+    sec.page_width = Cm(29.7)
+    sec.page_height = Cm(21.0)
+    sec.left_margin = Cm(2.0)
+    sec.right_margin = Cm(2.0)
+    sec.top_margin = Cm(2.0)
+    sec.bottom_margin = Cm(2.0)
+    return sec
+
+
+def configurar_seccion_portrait(doc):
+    """Vuelve a orientación vertical."""
+    sec = doc.add_section()
+    sec.orientation = 0
+    sec.page_width = Cm(21.0)
+    sec.page_height = Cm(29.7)
+    sec.left_margin = Cm(3.0)
+    sec.right_margin = Cm(2.5)
+    sec.top_margin = Cm(2.5)
+    sec.bottom_margin = Cm(2.5)
+    return sec
+
+
+def add_cuadro_simple(doc, bloques):
+    """Formato A: Bloque | Contenidos principales | Trimestre."""
+    from docx.shared import Cm
+    configurar_seccion_landscape(doc)
+
+    p_titulo = doc.add_paragraph()
+    p_titulo.alignment = 1
+    run_t = p_titulo.add_run('CUADRO DE DISTRIBUCIÓN DE CONTENIDOS')
+    run_t.font.bold = True
+    run_t.font.size = Pt(12)
+    run_t.font.color.rgb = COLOR_ANTRACITA
+    run_t.font.name = 'Georgia'
+
+    tabla = doc.add_table(rows=1 + len(bloques), cols=3)
+    tabla.style = 'Table Grid'
+    tabla.columns[0].width = Cm(7)
+    tabla.columns[1].width = Cm(16)
+    tabla.columns[2].width = Cm(3)
+
+    for i, enc in enumerate(['BLOQUE', 'CONTENIDOS PRINCIPALES', 'TRIMESTRE']):
+        estilo_celda(tabla.rows[0].cells[i], enc, bold=True, size=10, center=True, fondo='E8E8E8')
+
+    for idx, bloque in enumerate(bloques):
+        fila = tabla.rows[idx + 1]
+        estilo_celda(fila.cells[0], bloque['nombre'], bold=True, size=9)
+        contenidos_txt = '\n'.join([f'• {c}' for c in bloque['contenidos']])
+        estilo_celda(fila.cells[1], contenidos_txt, size=9)
+        estilo_celda(fila.cells[2], bloque.get('trimestre', ''), bold=True, size=10, center=True)
+
+    configurar_seccion_portrait(doc)
+
+
+def add_cuadro_dc_pba(doc, bloques):
+    """Formato B: Bloque | Contenidos | Situaciones/Modos | Indicadores | Tiempo."""
+    from docx.shared import Cm
+    configurar_seccion_landscape(doc)
+
+    p_titulo = doc.add_paragraph()
+    p_titulo.alignment = 1
+    run_t = p_titulo.add_run('CUADRO DE DISTRIBUCIÓN DE CONTENIDOS — DC PBA 2018')
+    run_t.font.bold = True
+    run_t.font.size = Pt(12)
+    run_t.font.color.rgb = COLOR_ANTRACITA
+    run_t.font.name = 'Georgia'
+
+    tabla = doc.add_table(rows=1 + len(bloques), cols=5)
+    tabla.style = 'Table Grid'
+    tabla.columns[0].width = Cm(5)
+    tabla.columns[1].width = Cm(8)
+    tabla.columns[2].width = Cm(7)
+    tabla.columns[3].width = Cm(5)
+    tabla.columns[4].width = Cm(1.5)
+
+    encabezados = ['BLOQUE', 'CONTENIDOS', 'SITUACIONES DE ENSEÑANZA', 'INDICADORES DE AVANCE', 'TIEMPO']
+    for i, enc in enumerate(encabezados):
+        estilo_celda(tabla.rows[0].cells[i], enc, bold=True, size=9, center=True, fondo='E8E8E8')
+
+    for idx, bloque in enumerate(bloques):
+        fila = tabla.rows[idx + 1]
+        estilo_celda(fila.cells[0], bloque['nombre'], bold=True, size=9)
+        estilo_celda(fila.cells[1], '\n'.join([f'• {c}' for c in bloque['contenidos']]), size=8)
+        estilo_celda(fila.cells[2], 'Ver situaciones de enseñanza en el desarrollo curricular', size=8)
+        estilo_celda(fila.cells[3], '\n'.join([f'• {i}' for i in bloque['indicadores']]), size=8)
+        estilo_celda(fila.cells[4], bloque.get('trimestre', ''), bold=True, size=9, center=True)
+
+    configurar_seccion_portrait(doc)
+
+
+def add_cuadro_por_trimestre(doc, bloques):
+    """Formato C: Por trimestre con bloques y contenidos dentro de cada uno."""
+    from docx.shared import Cm
+    configurar_seccion_landscape(doc)
+
+    p_titulo = doc.add_paragraph()
+    p_titulo.alignment = 1
+    run_t = p_titulo.add_run('DISTRIBUCIÓN DE CONTENIDOS POR TRIMESTRE')
+    run_t.font.bold = True
+    run_t.font.size = Pt(12)
+    run_t.font.color.rgb = COLOR_ANTRACITA
+    run_t.font.name = 'Georgia'
+
+    # Agrupar bloques por trimestre
+    por_trimestre = {'1°': [], '2°': [], '3°': []}
+    for bloque in bloques:
+        t = bloque.get('trimestre', '')
+        if t in por_trimestre:
+            por_trimestre[t].append(bloque)
+
+    tabla = doc.add_table(rows=1, cols=3)
+    tabla.style = 'Table Grid'
+    tabla.columns[0].width = Cm(8.5)
+    tabla.columns[1].width = Cm(8.5)
+    tabla.columns[2].width = Cm(8.5)
+
+    for i, trim in enumerate(['1° TRIMESTRE', '2° TRIMESTRE', '3° TRIMESTRE']):
+        estilo_celda(tabla.rows[0].cells[i], trim, bold=True, size=10, center=True, fondo='E8E8E8')
+
+    # Agregar fila de contenido
+    fila = tabla.add_row()
+    for i, key in enumerate(['1°', '2°', '3°']):
+        celda = fila.cells[i]
+        bloques_trim = por_trimestre.get(key, [])
+        if bloques_trim:
+            texto = ''
+            for b in bloques_trim:
+                texto += f"{b['nombre']}\n"
+                for c in b['contenidos']:
+                    texto += f"  • {c}\n"
+                texto += '\n'
+            p = celda.paragraphs[0]
+            run = p.add_run(texto.strip())
+            run.font.size = Pt(8)
+            run.font.color.rgb = COLOR_ANTRACITA
+            run.font.name = 'Arial'
+        else:
+            estilo_celda(celda, 'A definir', size=8, center=True)
+
+    configurar_seccion_portrait(doc)
+
+
+def add_cuadro_contenidos(doc, contenido, formato='simple'):
+    """Genera el cuadro de distribución de contenidos según el formato elegido."""
+    bloques = extraer_bloques_y_trimestres(contenido)
+    if not bloques:
+        return
+    if formato == 'dc_pba':
+        add_cuadro_dc_pba(doc, bloques)
+    elif formato == 'por_trimestre':
+        add_cuadro_por_trimestre(doc, bloques)
+    else:
+        add_cuadro_simple(doc, bloques)
 
 
 def add_heading_styled(doc, text, level):
@@ -324,6 +571,7 @@ def extraer_datos(contenido):
         'materia': '',
         'grado': '',
         'seccion': '',
+        'formato_cuadro': 'simple',
     }
     patrones = {
         'establecimiento': r'\*\*Establecimiento:\*\*\s*(.+)',
@@ -399,6 +647,15 @@ def generar():
     if not ciclo_pie:
         ciclo_pie = '2026'
     add_pie_pagina(doc, ciclo_pie)
+
+    # Agregar cuadro de distribución de contenidos (versión provisional)
+    formato_cuadro = datos.get('formato_cuadro', 'simple')
+    if formato_cuadro == 'Por bloque con situaciones de enseñanza':
+        add_cuadro_contenidos(doc, contenido, formato='dc_pba')
+    elif formato_cuadro == 'Por trimestre con bloques dentro':
+        add_cuadro_contenidos(doc, contenido, formato='por_trimestre')
+    else:
+        add_cuadro_contenidos(doc, contenido, formato='simple')
 
     # Procesar contenido línea por línea
     lineas = contenido.split('\n')
@@ -531,4 +788,4 @@ def health():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080) 
