@@ -60,8 +60,16 @@ def extraer_bloques_y_trimestres(contenido):
     en_criterios = False
     for linea in lineas:
         linea_s = linea.strip()
-        # Detener extracción cuando llega a criterios de evaluación
+        # Cuando llega a criterios, guardar el último bloque y detener
         if '## Criterios' in linea_s or 'Criterios de evaluación' in linea_s:
+            if bloque_actual:
+                bloques.append({
+                    'nombre': bloque_actual,
+                    'contenidos': contenidos_actuales[:4],
+                    'indicadores': indicadores_actuales[:3],
+                    'trimestre': ''
+                })
+                bloque_actual = None
             en_criterios = True
         if en_criterios:
             continue
@@ -95,7 +103,8 @@ def extraer_bloques_y_trimestres(contenido):
                 elif en_contenidos:
                     contenidos_actuales.append(texto)
 
-    if bloque_actual and not en_criterios:
+    # Guardar último bloque si no llegó a criterios
+    if bloque_actual:
         bloques.append({
             'nombre': bloque_actual,
             'contenidos': contenidos_actuales[:4],
