@@ -57,8 +57,14 @@ def extraer_bloques_y_trimestres(contenido):
     en_indicadores = False
 
     lineas = contenido.split('\n')
+    en_criterios = False
     for linea in lineas:
         linea_s = linea.strip()
+        # Detener extracción cuando llega a criterios de evaluación
+        if '## Criterios' in linea_s or 'Criterios de evaluación' in linea_s:
+            en_criterios = True
+        if en_criterios:
+            continue
         if linea_s.startswith('### Bloque') or linea_s.startswith('### bloque'):
             if bloque_actual:
                 bloques.append({
@@ -83,7 +89,7 @@ def extraer_bloques_y_trimestres(contenido):
                 else:
                     contenidos_actuales.append(texto)
 
-    if bloque_actual:
+    if bloque_actual and not en_criterios:
         bloques.append({
             'nombre': bloque_actual,
             'contenidos': contenidos_actuales[:4],
@@ -648,16 +654,8 @@ def generar():
         ciclo_pie = '2026'
     add_pie_pagina(doc, ciclo_pie)
 
-    # Agregar cuadro de distribución de contenidos (versión provisional)
-    formato_cuadro = datos.get('formato_cuadro', 'simple')
-    if formato_cuadro == 'Por bloque con situaciones de enseñanza':
-        add_cuadro_contenidos(doc, contenido, formato='dc_pba')
-    elif formato_cuadro == 'Por trimestre con bloques dentro':
-        add_cuadro_contenidos(doc, contenido, formato='por_trimestre')
-    else:
-        add_cuadro_contenidos(doc, contenido, formato='simple')
-
     # Procesar contenido línea por línea
+    # El cuadro se insertará automáticamente después de las expectativas de logro
     lineas = contenido.split('\n')
 
     for linea in lineas:
@@ -671,6 +669,15 @@ def generar():
         # ## Título nivel 2
         if linea_strip.startswith('## '):
             texto = linea_strip[3:]
+            # Insertar cuadro de contenidos antes del desarrollo curricular
+            if 'Desarrollo curricular' in texto or 'desarrollo curricular' in texto.lower():
+                formato_cuadro = datos.get('formato_cuadro', 'simple')
+                if formato_cuadro == 'Por bloque con situaciones de enseñanza':
+                    add_cuadro_contenidos(doc, contenido, formato='dc_pba')
+                elif formato_cuadro == 'Por trimestre con bloques dentro':
+                    add_cuadro_contenidos(doc, contenido, formato='por_trimestre')
+                else:
+                    add_cuadro_contenidos(doc, contenido, formato='simple')
             add_heading_styled(doc, texto, level=2)
             continue
 
