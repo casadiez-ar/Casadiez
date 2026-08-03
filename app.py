@@ -382,6 +382,7 @@ def generar():
     nueva_seccion = doc.add_section()
     nueva_seccion.header_distance = Cm(1.25)
     nueva_seccion.footer_distance = Cm(1.25)
+    nueva_seccion.page_number_start = 1
 
     # Agregar encabezado y pie de página (solo en sección del contenido)
     add_encabezado(
