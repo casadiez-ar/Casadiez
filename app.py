@@ -132,7 +132,7 @@ def add_caratula(doc, datos):
         nivel_word = 'año'
 
     if grado_limpio:
-        subtitulo_text = f'{grado_limpio} {nivel_word} {seccion}' if seccion else f'{grado_limpio} {nivel_word}'
+        subtitulo_text = f'{grado_limpio} {nivel_word}' if not seccion else f'{grado_limpio} {nivel_word} {seccion}'
     else:
         subtitulo_text = f'Sección {seccion}' if seccion else ''
 
@@ -475,28 +475,20 @@ def generar():
     doc.save(buffer)
     buffer.seek(0)
 
-    # Nombre: con materia si es 1 sola, sin materia si son varias
+    # Nombre del archivo: sin materia, sin "grado", solo grado numerico y sección
     import re as _re
-    materia_raw = datos.get('materia', '').strip()
     grado_raw_arch = datos.get('grado', '').strip()
     seccion_arch = datos.get('seccion', '').strip()
-
-    materias_lista = [m.strip() for m in _re.split(r'[,\n]', materia_raw) if m.strip()]
-    una_materia = len(materias_lista) == 1
 
     grado_arch = _re.sub(r'(?i)\bgrado\b', '', grado_raw_arch)
     grado_arch = _re.sub(r'(?i)\bsecci[oó]n\b', '', grado_arch)
     grado_arch = grado_arch.replace('"', '').replace("'", '').replace(',', '').replace('-', '').strip()
     grado_arch = _re.sub(r'\s+', ' ', grado_arch).strip()
 
-    if una_materia and materia_raw and grado_arch and seccion_arch:
-        nombre_archivo = f"Planificacion Anual {materia_raw} {grado_arch} grado {seccion_arch}.docx"
-    elif una_materia and materia_raw and grado_arch:
-        nombre_archivo = f"Planificacion Anual {materia_raw} {grado_arch} grado.docx"
-    elif grado_arch and seccion_arch:
-        nombre_archivo = f"Planificacion Anual {grado_arch} grado {seccion_arch}.docx"
+    if grado_arch and seccion_arch:
+        nombre_archivo = f"Planificacion Anual {grado_arch} {seccion_arch}.docx"
     elif grado_arch:
-        nombre_archivo = f"Planificacion Anual {grado_arch} grado.docx"
+        nombre_archivo = f"Planificacion Anual {grado_arch}.docx"
     else:
         nombre_archivo = "Planificacion Anual.docx"
 
