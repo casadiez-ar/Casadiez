@@ -136,15 +136,15 @@ def add_caratula(doc, datos):
     else:
         subtitulo_text = f'Sección {seccion}' if seccion else ''
 
-    # Reconstruir subtítulo con "grado" o "año" + sección
-    if grado_limpio and seccion:
-        subtitulo_text = f'{grado_limpio} {nivel_word} {seccion}'
-    elif grado_limpio:
-        subtitulo_text = f'{grado_limpio} {nivel_word}'
-    elif seccion:
-        subtitulo_text = f'Sección {seccion}'
+    # Subtitulo: insertar nivel_word entre numero y seccion
+    # grado_limpio puede ser "3 A" -- insertar nivel_word antes de la seccion
+    partes = grado_limpio.split()
+    if len(partes) >= 2:
+        subtitulo_text = partes[0] + " " + nivel_word + " " + " ".join(partes[1:])
+    elif len(partes) == 1:
+        subtitulo_text = partes[0] + " " + nivel_word
     else:
-        subtitulo_text = ''
+        subtitulo_text = nivel_word
 
     if subtitulo_text:
         p_subtitulo = doc.add_paragraph()
